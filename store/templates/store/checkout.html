@@ -1,0 +1,348 @@
+{% extends 'store/main.html' %}
+{% load static %}
+{% block content %}
+
+<div class="text-right">
+	<a class="btn btn-outline" href="{% url 'store' %}">&#x2192; חזרה לסל הקניות</a>
+</div>
+
+<div class="row box-element text-right">
+	<div class="col-lg-6">
+		<div class="border p-2" id="form-wrapper">
+			<form id="form">
+				{% if request.user.is_authenticated == False %}
+				<div id="user-info">
+					<h3>פרטי חיוב</h3>
+					<hr>
+					<div class="form-field">
+						<input required class="form-control" type="text" name="name" placeholder="Name..">
+					</div>
+					<div class="form-field">
+						<input id="email_input" required class="form-control" type="email" name="email" placeholder="Email..">
+						<div id="email_validation" class="hidden p-1 alert-danger small">
+							Please enter your email to apply coupon
+						</div>
+					</div>
+				</div>
+				{% endif %}
+				<br>
+				<div id="shipping-info">
+					<h3>סוג משלוח</h3>
+					<hr>
+					<div id="shipping_form">
+						<div class="form-check">
+							<input class="form-check-input" type="radio" name="shipping_input" id="self_pickup" value="1" checked>
+							<label class="form-check-label mr-3" for="self_pickup">
+								הגעה עצמית
+							</label>
+						</div>
+						<div class="form-check">
+							<input class="form-check-input" type="radio" name="shipping_input" id="home_delivery" value="2">
+							<label class="form-check-label mr-3" for="home_delivery">
+								משלוח הביתה
+							</label>
+						</div>
+						<div class="form-check">
+							<input class="form-check-input" type="radio" name="shipping_input" id="distribution_point" value="3">
+							<label class="form-check-label mr-3" for="distribution_point">
+								הגעה לנקודת חלוקה באזורך
+							</label>
+						</div>
+
+						<br>
+						<div class="product-info">
+							<div id="shipping_desc1" class="shipping_desc">
+								<p>קח את ההזמנה ממני ישירות</p>
+							</div>
+							
+							<div id="shipping_desc2" class="shipping_desc" style="display: none;">
+								<div class="form-field">
+									<input class="form-control" type="text" name="address" placeholder="Address..">
+								</div>
+								<div class="form-field">
+									<input class="form-control" type="text" name="city" placeholder="City..">
+								</div>
+								<div class="form-field">
+									<input class="form-control" type="text" name="zipcode" placeholder="Zip code..">
+								</div>
+							</div>
+							
+							<div id="shipping_desc3" class="shipping_desc" style="display: none;">
+								<p>עדיין לא פעיל</p>
+							</div>
+						</div>
+					</div>
+					<hr>
+
+				</div>
+
+				<input id="form-button" class="btn btn-success btn-block" type="submit" value="המשך">
+			</form>
+		</div>
+
+		<br>
+		<div class="border p-2 hidden" id="payment-info">
+			<p>דרך תשלום</p>
+			<p>
+				<button class="btn btn-lg btn-info" style="width: 100%;" type="button" data-toggle="collapse" data-target="#collapseExample"
+					aria-expanded="false" aria-controls="collapseExample">
+					<span class="align-items-center" style="height: 100%;">
+						<span class="material-symbols-outlined">
+							call
+						</span>
+					</span>
+					תשלום בשיחת טלפון
+				</button>
+			</p>
+			<div class="collapse" id="collapseExample">
+				<div class="product-info">
+					<p>ההזמנה שלך תישלח לביצוע אחרי שתשלים את התשלום במספר: 0546677426</p>
+					<p>זמני פעילות:</p>
+					<p>ראשון - חמישי 10AM - 5PM</p>
+					<div class="text-center">
+						<button type="button" class="btn btn-success" onclick="submitFormData(0)">בצע הזמנה</button>
+					</div>
+				</div>
+			</div>
+			<!--<button id="make-payment">Make payment</button>-->
+			<div id="paypal-button-container disabled"></div>
+			<div class="text-center">
+				<button id="loading" class="hidden btn btn-lg btn-primary m-2"type="button">
+					<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+					Loading...
+				</button>
+			</div>
+		</div>
+	</div>
+
+	<div class="col-lg-6">
+		<div class="border">
+			<br>
+
+			<h3 class="p-1">סיכום הזמנה</h3>
+			<div class="pl-2 pr-2">
+				<hr>
+			</div>
+			<div class="container">
+				כמות מוצרים: {{order.get_cart_items}}
+				<div>
+					סה"כ: ₪{{order.get_cart_total|floatformat:2}}
+				</div>
+				<div id="coupon_desc">
+				</div>
+				<div id="total_desc">
+				</div>
+				<div class="row pt-2 pb-4">
+					<div class="col-9">
+						<input id="coupon_input" class="form-control" type="text" name="coupon" placeholder="קופון...">
+					</div>
+					<div class="col-3 text-center">
+						<input id="coupon_submit" class="btn btn-sm btn-primary btn-block" value="הפעל">
+					</div>
+					<div id="coupon_validation" class="hidden ml-3 p-1 alert-danger small">
+					</div>
+				</div>
+				<div class="table-responsive">
+					<table class="table">
+						{% for item in items %}
+						<tr>
+							<td><img class="row-image" src="{{item.product.imageURL}}"></td>
+							<td>
+								<p>{{item.product.name}}</p>
+							</td>
+							<td><img class="row-image" src="{{item.image.imageURL}}"></td>
+							<td>
+								<p>₪{{item.product.price|floatformat:2}}</p>
+							</td>
+							<td>
+								<p>x{{item.quantity}}</p>
+							</td>
+						</tr>
+						{% endfor %}
+					</table>
+				</div>
+	
+			</div>
+		</div>
+	</div>
+</div>
+
+<script src="https://www.paypal.com/sdk/js?client-id=sb&currency=USD&disable-funding=credit"></script>
+
+<script type="text/javascript">
+var total = '{{order.get_cart_total}}'
+</script>
+
+<script type="text/javascript">
+	var is_coupon = false
+	var coupon_code = null
+	var is_auth = true
+	var is_valid = true
+
+	$("#coupon_submit").on('click', function () {
+		{% 	if request.user.is_authenticated == False %}
+		is_auth = false
+		{% endif %}
+		console.log('is_auth', is_auth)
+		if(is_auth == false){
+			if($("#email_input").val() == ""){
+				$("#email_validation").removeClass('hidden')
+				is_valid = false
+			}
+			else{
+				$("#email_validation").addClass('hidden')
+				is_valid = true
+			}
+		}
+
+		if(is_coupon == false && is_valid){
+			if ($("#coupon_input").val() != "" && $("#coupon_input").val() != null){
+				var url = "/is_coupon_valid/"
+				fetch(url, {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'applicaiton/json',
+						'X-CSRFToken': csrftoken,
+					},
+					body: JSON.stringify({'code': $("#coupon_input").val(), {% 	if request.user.is_authenticated %} 'order_id':"{{order.pk}}" {% else %} 'total': {{order.get_cart_total}}, 'email':$('#email_input').val() {% endif %}})
+					})
+					.then((response) => response.json())
+					.then((data) => {
+						console.log('Success:', data);
+						if (data['is_valid'] == true){
+							if (data['coupon']['type'] == 'per'){
+							discount = data['coupon']['discount'] * 0.01
+							$("#coupon_desc").html('discount: '+ data['coupon']['discount'] + '%  -' + data['drop_discount'] + '₪')
+							$("#total_desc").html('Total after discount: ' + data['updated_total'] + '₪')
+							}
+							else{
+								$("#coupon_desc").html('discount: '+ '-' + data['coupon']['discount'])
+								$("#total_desc").html('Total after discount: '+ data['updated_total'] + '₪')
+							}
+							total= data['updated_total']
+							is_coupon= true
+							coupon_code= data['coupon']['code']
+						}
+						else{
+							$("#coupon_validation").removeClass('hidden')
+							$("#coupon_validation").text(data['alert'])
+						}
+					})
+			}
+		}
+	})
+</script>
+
+
+<script>
+	// Render the PayPal button into #paypal-button-container
+	paypal.Buttons({
+
+		style: {
+			color: 'blue',
+			shape: 'rect',
+		},
+
+		// Set up the transaction
+		createOrder: function (data, actions) {
+			return actions.order.create({
+				purchase_units: [{
+					amount: {
+						value: parseFloat(total).toFixed(2)
+					}
+				}]
+			});
+		},
+
+		// Finalize the transaction
+		onApprove: function (data, actions) {
+			return actions.order.capture().then(function (details) {
+				// Show a success message to the buyer
+				submitFormData(1)
+			});
+		}
+
+	}).render('#paypal-button-container');
+</script>
+
+
+<script type="text/javascript">
+	$(document).ready(function() {
+		$("input[name$='shipping_input']").click(function() {
+			var index = $(this).val();
+			$("div.shipping_desc").hide();
+			$("#shipping_desc" + index).show();
+		});
+	});
+
+	var shipping = '{{order.shipping}}'
+
+	var form = document.getElementById('form')
+	form.addEventListener('submit', function (e) {
+		e.preventDefault()
+		console.log('Form Submitted...')
+		document.getElementById('form-button').classList.add("hidden");
+		document.getElementById('payment-info').classList.remove("hidden");
+	})
+
+	/*
+	document.getElementById('make-payment').addEventListener('click', function(e){
+		submitFormData()
+	})
+	*/
+
+	function submitFormData(status) {
+		console.log('Payment button clicked')
+
+		var userFormData = {
+			'name': null,
+			'email': null,
+			'total': total,
+		}
+
+		var shippingInfo = {
+			'address': null,
+			'city': null,
+			'zipcode': null,
+			'shipping_type':null,
+		}
+
+		if (shipping != 'False' && $('#shipping_form input:radio:checked').val() == "2") {
+			shippingInfo.address = form.address.value
+			shippingInfo.city = form.city.value
+			shippingInfo.zipcode = form.zipcode.value
+		}
+
+		shippingInfo.shipping_type = $('#shipping_form input:radio:checked').attr('id')
+
+		if (user == 'AnonymousUser') {
+			userFormData.name = form.name.value
+			userFormData.email = form.email.value
+		}
+
+		console.log('Shipping Info:', shippingInfo)
+		console.log('User Info:', userFormData)
+		$('#loading').removeClass("hidden")
+		
+		var url = "/process_order/"
+		fetch(url, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'applicaiton/json',
+				'X-CSRFToken': csrftoken,
+			},
+			body: JSON.stringify({'form': userFormData, 'shipping': shippingInfo, 'status': status {% if request.user.is_authenticated == False %}, 'coupon_code': coupon_code {% endif %}}),
+		})
+			.then((response) => response.json())
+			.then((data) => {
+				console.log('Success:', data);
+
+				cart = {}
+				document.cookie = 'cart=' + JSON.stringify(cart) + ";domain=;path=/"
+
+				window.location.href = "{% url 'order_complete' %}"
+
+			})
+	}
+</script>
+{% endblock content %}

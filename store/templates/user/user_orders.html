@@ -1,0 +1,103 @@
+{% extends 'store/main.html' %}
+{% block content %}
+
+<div class="box-element container text-right">
+    <h1>ההזמנות שלי</h1>
+    <hr>
+    <table class="table table-sm table-striped table-hover border">
+            <tr class="text-center">
+                <th scope="col">מספר הזמנה</th>
+                <th scope="col">מוצר</th>
+                <th scope="col">סטטוס הזמנה</th>
+                <th scope="col">תאריך הזמנה</th>
+                <th scope="col">לחץ לפרטים נוספים</th>
+            </tr>
+        {% for order in orders %}
+            {% for item_order in order.get_order_items %}
+                <tr class="table-hover text-center">
+                    <td><p>{{order.pk}}</p></td>
+                    <td scope="row"><a href="{% url 'product' item_order.product.name %}"><p>{{item_order.product.name}}</p></a></td>
+                    <td><p>{{order.get_status_display}}</p></td>
+                    <td><p>{{order.date_ordered}}</p></td>
+                    <td>
+                        <a data-toggle="collapse" href="#collapse{{forloop.parentloop.counter0}}_{{forloop.counter0}}" role="button" aria-expanded="false" aria-controls="collapse{{forloop.parentloop.counter0}}_{{forloop.counter0}}">
+                            <span class="material-symbols-outlined">
+                                add_circle
+                            </span>
+                        </a>
+                    </td>
+                </tr>
+                <tr class="collapse" id="collapse{{forloop.parentloop.counter0}}_{{forloop.counter0}}">
+                    <td colspan="5" class="product-info">
+                        <div class="row p-3 small">
+                            <div class="col">
+                                <h5>תמונה שצורפה</h5>
+                                <div class="text-center">
+                                    <img class="d-block w-100" src="{{item_order.image.imageURL}}">
+                                </div>
+                            </div>
+                            <div class="col">
+                                <h5>פרטי משלוח</Details></h5>
+                                <div>
+                                    סוג משלוח: {{order.shippingaddress_set.first.get_shipping_type_display}}
+                                </div>
+                                {% if order.shippingaddress_set.first.address != None%}
+                                <div>
+                                    כתובת: {{order.shippingaddress_set.first.address}}
+                                </div>                                <div>
+                                    עיר: {{order.shippingaddress_set.first.city}}
+                                </div>                                <div>
+                                    מיקוד: {{order.shippingaddress_set.first.zipcode}}
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="col">
+                                <div>
+                                    <h5>פרטי הזמנה</h5>
+                                    <div>
+                                        מחיר: ₪{{item_order.product.price}} x {{item_order.quantity}}
+                                    </div>
+                                    {% if order.coupon %}
+                                    <div>
+                                        מחיר הזמנה מקורי: ₪{{order.get_original_cart_total}}
+                                    </div>
+                                    <div>
+                                        קוד קופון: {{order.coupon}}
+                                    </div>
+                                    <div>
+                                        הנחה בשקלים: ₪{{order.get_discount_drop}}
+                                    </div>
+                                    {% endif %}
+                                    <div>
+                                        סה"כ: ₪{{item_order.get_total}}
+                                    </div>
+                                    <br>
+                                </div>
+                                {% if item_order.image.is_text == True %}
+                            </div>
+                            <div class="col">
+                                <h5>הגדרות ברכה</h5>
+                                    <div>
+                                        ברכה: "{{item_order.image.text}}"
+                                    </div>
+                                    <div>
+                                        צבע טקסט: {{item_order.image.text_color}}
+                                    </div>
+                                    <div>
+                                        פונט: {{item_order.image.text_font}}
+                                    </div>
+                            </div>    
+                            {% endif %}
+                        </div>                    
+                    </td>
+                </tr>
+
+            {% endfor %}
+        {% endfor %}
+    </table>
+    {% if orders %}
+    <div class="d-flex justify-content-center">אין לך הזמנות, הזמן עוד היום!</div>
+    <hr>
+    {% endif %}
+</div>
+{% endblock content %}

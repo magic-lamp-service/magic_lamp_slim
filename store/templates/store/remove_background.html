@@ -1,0 +1,157 @@
+{% extends 'store/main.html' %}
+{% load static %}
+{% block content %}
+<script src={%static 'js/upload_fb.js' %} defer></script>
+<script src={%static 'js/edit_moon_lamp.js' %} defer></script>
+<script async src="https://docs.opencv.org/master/opencv.js" type="text/javascript"></script>
+
+<button id="loading" class="hidden btn btn-lg btn-primary" style="position: absolute; left: 50%; top: 50%; z-index: 3;" type="button" disabled>
+    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+    Loading...
+</button>
+
+<div class=" text-right">
+	<a class="btn btn-outline" href="{% url 'product' product.name %}">&#x2192; חזרה למוצר</a>
+</div>    
+<div class="box-element text-right">
+    <div>
+        <div class="product-info">
+            <h1>יצירת תמונת ירח</h1>
+            <p>א. היכנסו לאתר <a href="https://www.photoroom.com/background-remover" target="_blank">removeBackground.com</a></p>
+            <p>ב. העלו את התמונה שתרצו</p>
+            <p>ג. הורידו את התמונה למכשירכם בכפתור "Download"</p>
+            <p>ד. חזרו חזרה לאתר שלנו</p>
+            <p>ה. העלו את התמונה הערוכה ולחצו על 'יצירת מנורת ירח'</p>
+            <p class="small">*הפיכת התמונה ל-'תמונת ירח' לוקחת זמן, תהיו סבלניים :~)</p> 
+        </div>
+        <br>
+        <form id="img_form">
+            {% csrf_token %}
+            <div>
+                העלו את התמונה הערוכה כאן:
+                {{form.file}}
+            </div>
+            <br>
+            <div>
+                תרצו להוסיף ברכה אישית למנורה?
+                <div class="small">
+                    *הוספת ברכה למנורה תקטין במעט את התמונה המקורית שהעלתם
+                </div>
+                <div>
+                    {{form.is_text}} כן
+                </div>
+                <div class="hidden">
+                    {{form.image_id}}
+                </div>
+            </div>
+            
+            <img id="img" class="hidden">
+            <img id="background" class="hidden" src="{{moon_background.file.url}}" alt="">
+            <canvas id="output" class="hidden"></canvas>
+
+            <div class="text-center">
+                <button id="btn_submit" data-product="{{product.id}}" data-action="add" class="btn btn-lg btn-success" type="submit">יצירת מנורת ירח</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+
+
+    $("#id_file").change(function () {
+        const img = document.getElementById('img');
+        const file = $('#id_file')[0].files[0];
+        const reader = new FileReader();
+        reader.onload = () => {
+            // Set the src attribute of the img element to the selected file
+            img.src = reader.result;
+        };
+        reader.readAsDataURL(file);
+    })
+
+    $('#btn_submit').click(function () {
+        if($("#id_file").val() != null && $("#id_file").val() != ""){
+            $("#loading").removeClass("hidden")
+        }
+        var is_text = $('#id_is_text').is(':checked')
+
+        edit_moon_img(is_text)
+        
+        var imageId = (new Date()).getTime()
+        var productId = this.dataset.product
+        var action = this.dataset.action
+
+        // Send the form data to the server using AJAX and the POST method
+        canvas = document.querySelector('#output');
+        canvas.toBlob((blob) => {
+                console.log('confirmed')
+                const fd = new FormData()
+                fd.append('csrfmiddlewaretoken', getToken('csrftoken'))
+                fd.append('image_id', imageId)
+                fd.append('is_text', is_text)
+                console.log(Array.from(fd))
+                if(is_text == true){
+                    fd.append('file', blob, 'my-image.png')
+                    fetch("", {
+                        method: 'POST',
+                        body: fd
+                    })
+                    .then(response => {
+                            if (response.ok) {
+                                // handle the successful response
+                                console.log('Request succeeded:', response);
+                                location.href = "/moon_lamp_editor/" + imageId
+
+
+                            } else {
+                                // handle the unsuccessful response
+                                console.error('Request failed:', response.status);
+                            }
+                        })
+                    .catch(error => {
+                        // handle any errors
+                        console.error(error);
+                    });    
+                }
+                else{
+                    upload_img(blob, imageId)
+                    .then(function(fb_url) {
+                        // do something with the URL of the uploaded image
+                        console.log('fb url', fb_url)
+                        fd.append('fb_link', fb_url)
+                        // send the POST request using fetch
+                        fetch("", {
+                            method: 'POST',
+                            body: fd
+                        })
+                        .then(response => {
+                            if (response.ok) {
+                                // handle the successful response
+                                console.log('Request succeeded:', response);
+                                if (user == 'AnonymousUser') {
+                                    addCookieItem(productId, action, imageId)
+                                } else {
+                                    updateUserOrder(productId, action, imageId)
+                                } 
+                            } else {
+                                // handle the unsuccessful response
+                                console.error('Request failed:', response.status);
+                            }
+                        })
+                        .catch(error => {
+                            // handle any errors
+                            console.error(error);
+                        });    
+                    })
+                    .catch(function(error) {
+                    // handle any errors
+                    console.error(error);
+                });
+                }
+        })
+    
+});
+
+</script>
+{% endblock content %}

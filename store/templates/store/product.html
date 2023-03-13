@@ -1,0 +1,117 @@
+{% extends 'store/main.html' %}
+{% load static %}
+{% block content %}
+    <div class=" text-right">
+        <a class="btn btn-outline" href="{% url 'store' %}">&#x2192; חזרה לחנות</a>
+    </div>    
+    
+    <div class="box-element text-right">
+        <div class="container">
+            <div>
+                <div class="row">
+                    <div class="col-lg-6">
+                        <div class="border">
+                            {% include 'components/product_images_slider.html' %}
+                        </div>
+                    </div>
+                    <div class="col-lg-6" style="max-width: 100%">
+                        <h3><strong>{{product.name}}</strong></h3>
+                        <hr>
+                        <h4><strong>₪{{product.price}}</strong></h4>
+                        <p class="product-info">{{product.short_description}}</p>
+                        {% if product.is_stock%}
+
+                        {% if product.prog_name == 'moon_lamp' %}
+                        <a href="{% url 'remove_background'%}">
+                        {% else %}
+                        <a href="{% url 'image_cropper' product.pk%}">
+                        {% endif %}
+                            <button class="btn btn-success add-btn">
+                                העלו תמונה משלכם
+                                <span class="material-symbols-outlined">
+                                    add_a_photo
+                                </span>
+                            </button>
+                        </a>
+                        {% else %}
+                        <div class="small" style="color:red">
+                            *לא במלאי
+                        </div>
+                        {% endif %}
+        
+                    </div>
+                </div>
+            </div>
+            <br>
+        
+            <div>
+                <h6><strong>שאלות שתמיד שואלים</strong></h6>
+                <hr>
+        
+                {% include 'components/user_QA.html' %}
+            </div>
+            <br>
+
+            {% if request.user.is_authenticated %}
+            <div>
+                <form method="POST" action="">
+                    {% csrf_token %}
+                    <h4 id="form-title">כתבו משוב</h4>
+                    <div class="form-group">
+                        {{form.text}}
+                    </div>
+                    <button type="submit" class="btn btn-info">שלח</button>
+                </form>
+            </div>
+            <br>
+            {% endif %}
+
+            {% if reviews %}
+                <div class="">
+                    <h4 id="form-title">ביקורות של לקוחות שלנו</h4>
+                    <hr>
+                    {% for review in reviews%}
+                    <div class="border p-2 mt-2 mb-2">
+                        <div class="row justify-content-md-center align-items-center">
+                            <div class="col-1 col-md-auto">
+                                <span class="material-symbols-outlined">
+                                    account_circle
+                                </span>    
+                        </div>
+                        
+                        <div class="col-11">
+                                <h5 class="ml-2">{{review.customer.name}}</h5>
+                                <div class="row ml-1 small">
+                                    <span class="material-symbols-outlined">
+                                        calendar_month
+                                    </span>
+                                    <span class="ml-1">
+                                        {{review.date_added|date:"d/m/y"}}
+                                    </span>
+                                    <span class="material-symbols-outlined ml-2">
+                                        schedule
+                                    </span>
+                                    <span class="ml-1">
+                                        {{review.date_added.time}}
+                                    </span>
+                                </div>
+                                <div class="row ml-2 mt-2">
+                                    {{review.text}}
+                                </div>
+                            </div>    
+                        </div>
+                    </div>
+                    <hr>
+                    {% endfor %}
+        
+                </div>
+            {% else %}
+                <div>
+                    <p>אין עדיין משוב על המוצר מלקוחות, תהיה הראשון!</p>
+                </div>
+            {% endif %}
+        </div>
+
+    </div>
+
+    {% endblock content %}

@@ -1,0 +1,217 @@
+{% extends 'store/main.html' %}
+{% load static %}
+{% block content %}
+
+<!-- cropper -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css"
+    integrity="sha512-0SPWAwpC/17yYyZ/4HSllgaK7/gg9OlVozq8K7rf3J8LvCjYEEIfzzpnA2/SSjpGIunCSD18r3UhvDcu/xncWA=="
+    crossorigin="anonymous" referrerpolicy="no-referrer" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"
+    integrity="sha512-ooSWpxJsiXe6t4+PPjCgYmVfr1NS5QXJACcR/FPpsdm6kqG1FmQ2SVyg2RXeVuCRBLr0lWHnWJP6Zs1Efvxzww=="
+    crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<!-- slider -->
+<script type="text/javascript" src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+<script type="text/javascript"
+    src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui-touch-punch/0.2.3/jquery.ui.touch-punch.min.js"></script>
+
+<!-- cropperJS -->
+<script src={%static 'js/image_cropper.js' %} defer></script>
+<script src={%static 'js/resize_image.js' %} defer></script>
+<script src={%static 'js/upload_fb.js' %} defer></script>
+
+<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-colorpicker/2.3.3/css/bootstrap-colorpicker.min.css"
+    rel="stylesheet">
+<script
+    src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-colorpicker/2.3.3/js/bootstrap-colorpicker.min.js"></script>
+
+<link rel="stylesheet" type="text/css" href="{% static 'css/fonts.css' %}">
+
+<style>
+    .slider-val-area {
+        width: 50%;
+        padding: 10px 15px 0 10px
+    }
+
+    .slider-val-area #min-zoom-val {
+        float: left;
+    }
+
+    .slider-val-area #max-zoom-val {
+        float: right;
+    }
+    .center_form {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%,-50%);
+    }
+    #image_text {
+        white-space: nowrap;
+        position: absolute;
+        z-index: 2;
+        max-width: 450px;
+        left: 50%;
+        top: {{product.text_spacer_from_top}}%;
+        transform: translate(-50%,-50%);
+        text-align: center; 
+        font-size: 45px;
+        font-family: Abraham; 
+        color: rgb(255, 255, 255);
+        -webkit-text-stroke: 2px black;
+    }
+    
+    #clock_dot {
+        height: 40px;
+        width: 40px;
+        position: absolute;
+        z-index: 2;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%,-50%);
+        background-color: #bbb;
+        border-radius: 50%;
+    }    
+</style>
+
+<button id="loading" class="hidden btn btn-lg btn-primary" style="position: absolute; left: 50%; top: 50%; z-index: 3;" type="button" disabled>
+    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+    Loading...
+</button>
+
+<div id="clock_dot" class="hidden"></div>
+<div id="image_text" class="hidden"></div>
+
+<div class=" text-right">
+	<a class="btn btn-outline" href="{% url 'product' product.name%}">&#x2192; חזרה למוצר</a>
+</div>
+<div class="box-element text-right">
+    <h3>העלו תמונה משלכם</h3>
+    <hr>
+    <div class="container">
+        <p class="text-center">
+            בחרו תמונה למנורת הקסם שלכם, תוכלו לחתוך את התמונה לטעמכם ולהוסיף ברכה קצרה משלכם
+        </p>
+        <hr>
+        <div id="image_form_new">
+        </div>
+    
+        <div class="row product-info">
+            <div class="col-lg-7">
+                <div id="image-box" class="text-center align-items-center" style="height: 300px; background-color: gray;">
+                    <div class="center_form">
+                        <form action="" id="image-form" style="color: white;">
+                            <div id="select_img_p">לחצו כאן להעלאת תמונה</div>
+                            <div id="image-form-container" style="transform: translate(-20%, 0%); left: 50%;">
+                                {% csrf_token %}
+                                {{form.file}}
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <div class="mt-3 mb-3" id="new_form_container">
+                </div>
+            </div>
+            <div class="col-lg-5">
+                <div id="image_setting_container">
+                    <div class="row">
+                        <div class="col-3" style="vertical-align: middle;">
+                            זום תמונה
+                        </div>
+                        <div class="col-8">
+                            <div class="d-flex justify-content-center">
+                                <span id="start_slider_value" class="hidden font-weight-bold purple-text mr-2 mt-1">0</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#000000">
+                                    <path d="M0 0h24v24H0V0z" fill="none" />
+                                    <path
+                                        d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14zM7 9h5v1H7z" />
+                                </svg>
+                                <form class="range-field w-100">
+                                    <input id="slider_input" class="border-0 w-100" type="range" min="0" max="100" />
+                                </form>
+                                <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#000000">
+                                    <path d="M0 0h24v24H0V0z" fill="none" />
+                                    <path
+                                        d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
+                                    <path d="M12 10h-2v2H9v-2H7V9h2V7h1v2h2v1z" />
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                    <hr>
+                    <form id="image_text_setting">
+                        <div class="form-group row">
+                            <label class="col-4" for="image_text_input">ברכה קצרה</label>
+                            <input class="form-control col-8"  type="text" id="image_text_input"/>
+                        </div>
+                        <hr>
+                        <div class="form-group row">
+                            <label class="col-4" for="color">צבע הטקסט</label>
+                            <input class="form-control col-8" type="text" id="color"/>
+                        </div>
+                        <hr>
+                        <div class="form-group row">
+                            <button id="bigger_text" type="button" class="btn btn-light btn-sm col m-1">
+                                הגדל טקסט<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#000000">
+                                    <path d="M0 0h24v24H0V0z" fill="none" />
+                                    <path d="M9 4v3h5v12h3V7h5V4H9zm-6 8h3v7h3v-7h3V9H3v3z" />
+                                </svg>
+                            </button>
+                            <button id="smaller_text" type="button" class="btn btn-light btn-sm col m-1">
+                                הקטן טקסט<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#000000">
+                                    <path d="M0 0h24v24H0V0z" fill="none" />
+                                    <path d="M9 4v3h5v12h3V7h5V4H9zm-6 8h3v7h3v-7h3V9H3v3z" />
+                                </svg>
+                            </button>
+                        </div>
+                        <hr>
+                        <div class="form-group row">
+                            <label class="col-4" for="text_font">פונט</label>
+                            <select class="form-control col-8" id="text_font">
+                                <option>Abraham</option>
+                                <option>GveretLevin</option>
+                                <option>noot</option>
+                                <option>VarelaRound</option>
+                                <option>Rubik-Black</option>
+                            </select>
+                        </div>
+                        <hr>
+                        <div class="form-group row">
+                            <label class="col-4" for="text_loc">מיקום טקסט</label>
+                            <select class="form-control col-8" id="text_loc">
+                                <option>למטה</option>
+                                <option>למעלה</option>
+                            </select>
+                        </div>
+
+                    </form>
+                </div>    
+            </div>
+            
+            <div id="confirm_container" class="container hidden text-center">
+                <button data-product="{{product.id}}" data-image_ratio_x="{{product.image_ratio_x}}" style="width: 50%;"
+                data-image_ratio_y="{{product.image_ratio_y}}" data-action="add" class=" btn btn-success mt-3" id="confirm-btn">
+                שמירה והוספה לסל הקניות
+                </button>    
+            </div>  
+        </div>
+
+        <br>
+
+    </div>
+
+    {% include 'components/upload_image_tips.html' %}
+
+</div>
+
+<script>
+    const text_spacer_from_top = parseInt("{{product.text_spacer_from_top}}")/100
+
+    if("{{product.type}}" == 'square'){
+        $('#clock_dot').removeClass("hidden")
+            console.log('ready for clock')
+    }
+</script>
+
+<script type="application/javascript" src='{% static "js/image_cropper.js" %}'></script>
+
+{% endblock content %}

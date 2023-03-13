@@ -1,0 +1,74 @@
+{% extends 'store/main.html' %}
+{% load static %}
+{% block content %}
+<div class="text-right box-element">
+    <div class="row">
+        <h1 class="col mr-4">רשימת הזמנות</h1>
+        <div class="col mb-3 mt-2" style="text-align: left;">
+            <form action="{% url 'admin_orders' %}" method="get">
+                {{ form }}
+                <input type="submit" value="Search">
+            </form>
+            <a href="{% url 'admin_orders' %}">נקה חיפוש</a>
+        </div>
+    </div>
+
+    {% if orders_list %}
+        <ul>
+            <div class="table-responsive">
+                <table class="table table-hover table-striped table-bordered table-sm">
+                    <tr class="text-center">
+                        <th scope="col">מספר הזמנה</th>
+                        <th scope="col">תאריך הזמנה</th>
+                        <th scope="col">כמות</th>
+                        <th scope="col">מחיר</th>
+                        <th scope="col">סטטוס</th>
+                    </tr>
+                    {% for order in orders_list %}
+                            <tr style="transform: rotate(0);">
+                                <th scope="row">
+                                    <a href="{% url 'order_details' order.pk%}" class="stretched-link">Order #{{order.pk}}</a>
+                                </th>
+                                <td class="text-center">At {{order.date_ordered}}</td>
+                                <td class="text-center">x{{order.get_cart_items}}</td>
+                                <td class="text-center">{{order.get_cart_total|floatformat:2}}$</td>
+                                <td class="text-center">{{order.status}}</td>
+                            </tr>
+                    {% endfor %}
+                </table>
+            </div>
+        </ul>
+        <div class="mr-5">
+            <div>
+            סה"כ הזמנות: {{ orders_len }}
+            </div>  
+
+            <div>
+            סה"כ הזמנות סגורות: {{ orders_closed_len }}
+            </div>  
+            
+            <div>
+            סה"כ הזמנות פתוחות: {{ orders_opened_len }}
+            </div>  
+        </div>
+        {% if is_paginated %}
+            <div class="pagination d-flex justify-content-center">
+                <span class="page-links">
+                    {% if page_obj.has_previous %}
+                        <a href="/admin_orders?page={{ page_obj.previous_page_number }}">previous</a>
+                    {% endif %}
+                    <span class="page-current">
+                        Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+                    </span>
+                    {% if page_obj.has_next %}
+                        <a href="/admin_orders?page={{ page_obj.next_page_number }}">next</a>
+                    {% endif %}
+                </span>
+            </div>
+            {% endif %}
+        {% else %}
+        <p>There are no Orders.</p>
+        {% endif %}
+</div>
+
+{% endblock %}

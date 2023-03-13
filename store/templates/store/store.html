@@ -1,0 +1,92 @@
+{% extends 'store/main.html' %}
+{% load static %}
+{% block content %}
+<link rel="stylesheet" type='text/css' href="{% static 'css/carousel-fade.css' %}">
+<style>
+	#start_button{
+		position: absolute;
+        z-index: 2;
+        left: 50%;
+        top: 82%;
+        transform: translate(-50%,-50%);
+	}
+</style>
+<div class="box-element">
+	<div class="row justify-content-center">
+		<div class="col-10 text-center" >
+			<a href="#desc">
+				<button id="start_button" type="button" class="btn btn-info" >
+					הזמינו מנורת קסם 
+					התחילו כאן
+					<span class="material-symbols-outlined">
+						touch_app
+					</span>
+				</button>
+			</a>
+			<div id="carouselExampleControls" class="carousel slide" data-ride="carousel">
+				<ol class="carousel-indicators">
+					{% for adImage in adImages %}
+					<li data-target="#carouselExampleIndicators" data-slide-to="{{ forloop.counter0 }}" {% if forloop.first %} class="active" {% endif %}></li>
+					{% endfor %}
+				</ol>
+				<div class="carousel-inner">
+					{% for adImage in adImages %}
+						<div class="carousel-item {% if forloop.first %} active {% endif %}">
+							<img src="{{adImage.imageURL}}" class="d-block w-100 img" alt="...">
+						</div>
+					{% endfor %}		
+				</div>
+				<a class="carousel-control-prev" href="#carouselExampleControls" role="button" data-slide="prev">
+					<span class="carousel-control-prev-icon" aria-hidden="true"></span>
+					<span class="sr-only">Previous</span>
+				</a>
+				<a class="carousel-control-next" href="#carouselExampleControls" role="button" data-slide="next">
+					<span class="carousel-control-next-icon" aria-hidden="true"></span>
+					<span class="sr-only">Next</span>
+				</a>
+			</div>		
+		</div>
+	</div>
+	
+	<br>
+	
+	<p id="desc" class="text-center product-info ">
+		מנורה חלומית קסומה עם תמונה משלך, מתנה שתמיד כיף לקבל!
+		אנחנו מדפיסים עבורכם את המנורה בפלסטיק באיכות גבוהה במדפסת תלת מימד כדי להפיק את המרב מהתמונה שלכם. אתם יכולים להזמין את המנורה בגדלים שונים וצורות לבחירתכם.	
+	</p>
+	
+	<div id="helper_bar" style="padding: 0px !important;">
+		{% include 'components/helper_bar.html' %}
+	</div>
+	
+	<div class="row">
+		{% for product in products %}
+		<a href="{% url 'product' product.name%}">
+			<div class="col-lg-4 text-right">
+				<div class=" product">
+					<img style="border-radius: 2%;" class="product-image" src="{{product.imageURL}}">
+					<h6 class="mt-2"><strong>{{product.name}}</strong></h6>
+					<hr>
+	
+					{% if product.prog_name == 'moon_lamp' %}
+					<a href="{% url 'remove_background'%}">
+					{% else %}
+					<a href="{% url 'image_cropper' product.pk%}">
+					{% endif %}
+						<button class="btn btn-outline-success add-btn">
+							העלו תמונה משלכם
+							<span class="material-symbols-outlined">
+								add_a_photo
+							</span>
+						</button>
+					</a>
+					<h4 style="display: inline-block; float: left"><strong>₪{{product.price}}</strong></h4>
+				</div>
+			</div>
+		</a>
+		{% endfor %}
+	</div>
+</div>
+
+
+{% endblock content %}

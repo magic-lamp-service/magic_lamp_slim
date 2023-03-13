@@ -1,0 +1,75 @@
+{% extends 'store/main.html' %}
+{% load static %}
+{% block content %}
+
+<div class=" text-right">
+	<a class="btn btn-outline" href="{% url 'store' %}">&#x2192; חזרה לחנות</a>
+</div>
+<br>
+
+
+<div class="box-element text-right">
+
+	<div class="row">
+		<div class="col-lg-8">
+			<h1>עגלת קניות</h1>
+			<hr>
+			<div class="table-responsive">
+				<table class="table table-sm table-striped table-hover border">
+						<tr>
+							<th scope="col"></th>
+							<th scope="col">מוצר</th>
+							<th scope="col">תמונה שצורפה</th>
+							<th scope="col">מחיר</th>
+							<th scope="col">כמות</th>
+							<th scope="col">סך הכל</th>
+						</tr>
+					{% for item in items %}
+					<tr>
+						<td><img class="row-image" src="{{item.product.imageURL}}"></td>
+						<th scope="row"><a href="{% url 'product' item.product.name%}"><p>{{item.product.name}}</p></a></th>
+						<td><img class="row-image" src="{{item.image.imageURL}}"></td>
+						<td><p>₪{{item.product.price|floatformat:2}}</p></td>
+						<td>
+							<p class="quantity">{{item.quantity}}</p>
+							<div class="quantity">
+								<img data-product="{{item.product.id}}" data-imageid="{{item.image.image_id}}" data-action="add" class="chg-quantity update-cart" src="{% static  'images/arrow-up.png' %}">
+								<img data-product="{{item.product.id}}" data-imageid="{{item.image.image_id}}" data-action="remove" class="chg-quantity update-cart" src="{% static  'images/arrow-down.png' %}">
+							</div>	
+						</td>
+						<td><p>₪{{ item.get_total }}</p></td>
+					</tr>
+					{% endfor %}
+				</table>
+				{% if cartItems == 0 %}
+				<div class="d-flex justify-content-center">עגלת הקניות ריקה</div>
+				<hr>
+				{% endif %}
+			</div>
+		</div>
+			<div class="col-lg-4">
+				<div>
+					<h1>סה"כ בסל הקניות</h1>
+					<hr>
+					{% if items %}
+					<table class="table border p-2">
+						<tr>
+							<th><h5>כמות מוצרים: <strong>{{order.get_cart_items}}</strong></h5></th>
+							<th><h5>סה"כ:<strong> ₪{{order.get_cart_total|floatformat:2}}</strong></h5></th>							
+							<th>
+								<a  style="float:right; margin:5px;" class="btn btn-success" href="{% url 'checkout' %}">מעבר לתשלום</a>
+							</th>
+						</tr>
+					</table>
+					{% else %}
+					<br>
+					<p class="text-center">הוסיפו מוצרים לסל הקניות</p>
+					{% endif %}
+				</div>
+			</div>
+		</div>
+</div>
+
+<script type="application/javascript" src='{% static "js/cart.js" %}'></script>
+
+{% endblock content %}

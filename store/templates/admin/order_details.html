@@ -1,0 +1,170 @@
+{% extends 'store/main.html' %}
+{% block content %}
+
+{% if order.orderitem_set %}
+<div class="box-element text-right">
+    <a class="btn btn-outline" href="{% url 'admin_orders' %}">&#x2192; חזרה לרשימת הזמנות</a>
+    <h1>הזמנה מספר #{{order.pk}}</h1>
+    <hr>
+    <div class="container">
+        <h3>סל הקניות</h3>
+        <div class="table-responsive">
+            <table class="table table-sm table-striped table-bordered">
+                    <tr>
+                        <th scope="col"></th>
+                        <th scope="col">מוצר</th>
+                        <th scope="col">תמונה שצורפה</th>
+                        <th scope="col">מחיר</th>
+                        <th scope="col">כמות</th>
+                        <th scope="col">סה"כ</th>
+                    </tr>
+                {% for order_item in order.orderitem_set.all %}
+                <tr class="table-hover">
+                    <td><img class="row-image" src="{{order_item.product.imageURL}}"></td>
+                    <td>
+                        <p>{{order_item.product.name}}</p>
+                    </td>
+                    <td>
+                        <a href="{{order_item.image.imageURL}}" target="_blank">
+                            <img class="row-image" src="{{order_item.image.imageURL}}">
+                        </a>
+                    </td>
+                    <td>
+                        <p>{{order_item.product.price|floatformat:2}}</p>
+                    </td>
+                    <td>
+                        <p>x{{order_item.quantity}}</p>
+                    </td>
+                    <td>
+                        <p>{{order_item.get_total|floatformat:2}}</p>
+                    </td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+
+    </div>
+    {% else %}
+    <p>There are no Orders.</p>
+    {% endif %}
+
+    <br>
+    <div class="container row">
+        <div class="col m-1">
+            {% if order.shippingaddress_set.first %}
+            <div>
+                <div class="product-info">
+                    <h3>כתובת משלוח</h3>
+                    <table class="table table-sm table-bordered">
+                        <tbody>
+                            <tr>
+                                <th scope="row">סוג משלוח</th>
+                                <td>{{order.shippingaddress_set.first.get_shipping_type_display}}</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">כתובת</th>
+                                <td>{{order.shippingaddress_set.first.address}}</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">עיר</th>
+                                <td>{{order.shippingaddress_set.first.city}}</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">מוקד</th>
+                                <td>{{order.shippingaddress_set.first.zipcode}}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>    
+            </div>
+            {% endif %}
+            <br>
+            {% if order.customer %}
+            <div>
+                <div class="product-info">
+                    <h3>פרטי חיוב</h3>
+                    <table class="table table-sm table-bordered">
+                        <tbody>
+                            <tr>
+                                <th scope="row">שם</th>
+                                <td>{{order.customer.name}}</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">מייל</th>
+                                <td>{{order.customer.email}}</td>
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+            {% endif %}    
+        </div>    
+        <div class="col m-1">
+            <div class="product-info">
+                <h3>סיכום הזמנה</h3>
+                <table class="table table-sm table-bordered">
+                    <tbody>
+                        <tr>
+                            <th scope="row">מספר הזמנה</th>
+                            <td>{{order.pk}}</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">תאריך</th>
+                            <td>{{order.date_ordered}}</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">כמות מוצרים</th>
+                            <td>{{order.get_cart_items}}</td>
+                        </tr>
+                        {% if order.coupon %}
+                        <tr>
+                            <th scope="row">מחיר הזמנה מקורי</th>
+                            <td>{{order.get_original_cart_total}}</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">קופון</th>
+                            <td>{{order.coupon}}</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">הנחה</th>
+                            <td>{{order.get_discount_drop}}</td>
+                        </tr>
+                        {% endif %}
+                        <tr>
+                            <th scope="row">מחיר הזמנה</th>
+                            <td>{{order.get_cart_total}}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <br>
+            <div class="product-info">
+                <h3>עדכון סטטוס</h3>
+                <form method="POST" action=""  style="text-align: right !important;">
+                    {% csrf_token %}
+                    {{form.status}}   
+                    <button class="btn btn-outline-success " type="submit">שמור</button>
+                </form>
+            </div>
+
+        </div>
+    </div>
+    <br>
+</div>
+
+{% if is_paginated %}
+<div class="pagination d-flex justify-content-center">
+    <span class="page-links">
+        {% if page_obj.has_previous %}
+        <a href="/orders_admin?page={{ page_obj.previous_page_number }}">previous</a>
+        {% endif %}
+        <span class="page-current">
+            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+        </span>
+        {% if page_obj.has_next %}
+        <a href="/orders_admin?page={{ page_obj.next_page_number }}">next</a>
+        {% endif %}
+    </span>
+</div>
+{% endif %}
+{% endblock %}
